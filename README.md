@@ -36,12 +36,14 @@ Projeto desenvolvido para a disciplina *Projeto Prático – Sistema de Cadastro
 ---
 
 ## 📂 Estrutura do Projeto
+```
 IdiomaManager/
 ├── IdiomaController.cpp # Arquivo principal (contém toda a lógica e a função main)
 ├── db.csv # Banco de dados persistente
 └── docs/
---------└── Projeto-Prático-Descrição-2025s2.docx # Especificação original
---------└── Relatório.docx # Relatório e reflexões do projeto
+    └── Projeto-Prático-Descrição-2025s2.docx # Especificação original
+    └── Relatório.docx # Relatório e reflexões do projeto
+```
 
 ### 🧱 Compilação
 ```
