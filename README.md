@@ -156,13 +156,14 @@ This project was developed for the course *Projeto Prático – Sistema de Cadas
 ---
 
 ## 📂 Project Structure
+```
 IdiomaManager/
 ├── IdiomaController.cpp # Main file (contains all logic and the main function)
 ├── db.csv # Persistent language database
 └── docs/
---------└── Projeto-Prático-Descrição-2025s2.docx # Original assignment specification
---------└── Relatório.docx # Project report and reflections
-
+    └── Projeto-Prático-Descrição-2025s2.docx # Original assignment specification
+    └── Relatório.docx # Project report and reflections
+```
 ### 🧱 Compilation
 ```
 bash
