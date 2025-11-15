@@ -21,7 +21,7 @@ struct idioma
     bool valido = true; // Flag usada para sinalizar que o idioma retornado é proveniente de um erro
 };
 
-// Lista para idiomas - Recomenda-se usar o construtor newArrayListIdioma para instanciar
+// Vetor dinâmico manual para idiomas - Recomenda-se usar o construtor newArrayListIdioma para instanciar
 struct arrayListIdioma
 {
     int capacidade = 0, tamanho = 0;
@@ -31,6 +31,7 @@ struct arrayListIdioma
 
 // ? Controle de erros na criação de instâncias das Estruturas de dados
 
+// Retorna instância inválida de idioma
 idioma error()
 {
     idioma error;
@@ -38,6 +39,7 @@ idioma error()
     return error;
 }
 
+// Retorna instância inválida de ArrayListIdioma
 arrayListIdioma errorArray()
 {
     arrayListIdioma newInst;
@@ -52,6 +54,7 @@ arrayListIdioma errorArray()
 // ? Controle de instâncias de arrayListIdioma
 
 // Construtores de arrayListIdioma - Garante instâncias inicializadas
+
 arrayListIdioma newArrayListIdioma(int size)
 {
     arrayListIdioma newInst;
@@ -70,6 +73,7 @@ arrayListIdioma newArrayListIdioma(int size)
 }
 
 // Usado para cópias
+// OBS: Não copia o próprio vetor de Idiomas, apenas adota o seu ponteiro)
 arrayListIdioma newArrayListIdioma(int size, int tamanho, idioma *db)
 {
     if (db == nullptr || size < tamanho || size < 0 || tamanho < 0)
@@ -88,6 +92,8 @@ void clearArrayListIdioma(arrayListIdioma &vet)
 {
     if (vet.db != nullptr)
         delete[] vet.db;
+
+    vet.db = nullptr;
 }
 
 //? CRUD
@@ -95,6 +101,7 @@ void clearArrayListIdioma(arrayListIdioma &vet)
 // Aumenta o espaço do vetor conforme o necessário. Obs: Libera a memória do vetor antigo, in-place
 void resize(arrayListIdioma &vet)
 {
+    // Checagem de erros, sempre transforma um vetor inválido em um válido
     if (vet.capacidade < 0)
         vet.capacidade = 0;
 
@@ -116,7 +123,7 @@ void resize(arrayListIdioma &vet)
 // Considera que o vetor está ordenado com base no id
 idioma update(arrayListIdioma &lista, int at, idioma idiomaNovo)
 {
-    if (!lista.valido || at >= lista.tamanho)
+    if (!lista.valido || at >= lista.tamanho || lista.db[at].del)
         return error();
 
     lista.db[at] = idiomaNovo;
@@ -125,12 +132,16 @@ idioma update(arrayListIdioma &lista, int at, idioma idiomaNovo)
 
 // Adiciona um idioma no final do vetor
 // Considera que o vetor está ordenado com base no id
+// O id do novo elemento é baseado no id do último
 idioma add(arrayListIdioma &lista, idioma idiomaNovo)
 {
     if (!idiomaNovo.valido || lista.tamanho < 0)
         return error();
 
-    idiomaNovo.id = lista.db[lista.tamanho - 1].id + 1;
+    if (lista.tamanho > 0)
+        idiomaNovo.id = lista.db[lista.tamanho - 1].id + 1;
+    else
+        idiomaNovo.id = 1;
 
     while (lista.tamanho >= lista.capacidade)
         resize(lista);
@@ -154,17 +165,79 @@ idioma removeIdioma(arrayListIdioma &lista, int id)
     return error();
 }
 
-// Acha um idioma pelo seu Identificador
-// OBS: considera-se que o vetor esteja ordenado de acordo com o atributo específico da busca
-idioma findById(arrayListIdioma &lista, int id)
-{
-    if (id > lista.tamanho || id <= 0)
-        return error();
+//? Busca Binária
 
-    return lista.db[id - 1];
+// Checa se o array de idiomas está ordenado em ordem crescente com base no atributo escolhido
+// atributoEspecifico -> 0 id, 1 nome, 2 famling, 3 ppais
+bool isSorted(const arrayListIdioma &vet, int atributoEspecifico)
+{
+    switch (atributoEspecifico)
+    {
+    case 0:
+        for (int i = 1; i < vet.tamanho; i++)
+        {
+            if (vet.db[i].id < vet.db[i - 1].id)
+                return false;
+        }
+        return true;
+
+    case 1:
+        for (int i = 1; i < vet.tamanho; i++)
+        {
+            if (vet.db[i].nome < vet.db[i - 1].nome)
+                return false;
+        }
+        return true;
+
+    case 2:
+        for (int i = 1; i < vet.tamanho; i++)
+        {
+            if (vet.db[i].famLing < vet.db[i - 1].famLing)
+                return false;
+        }
+        return true;
+
+    case 3:
+        for (int i = 1; i < vet.tamanho; i++)
+        {
+            if (vet.db[i].principalPais < vet.db[i - 1].principalPais)
+                return false;
+        }
+        return true;
+
+    default:
+        return false;
+    }
+
+    return false;
 }
 
-//? Busca Binária
+// Faz exatamente o que parece
+// Considera o vetor já ordenado
+idioma binSearchId(const arrayListIdioma &lista, int target)
+{
+    if (!isSorted(lista, 0))
+        return error();
+
+    int left = 0;
+    int right = lista.tamanho - 1;
+
+    while (left <= right)
+    {
+        int mid = left + (right - left) / 2;
+
+        if (lista.db[mid].id == target && !lista.db[mid].del)
+            return lista.db[mid];
+
+        else if (lista.db[mid].id < target)
+            left = mid + 1;
+
+        else
+            right = mid - 1;
+    }
+
+    return error();
+}
 
 // Acha a primeira instância no vetor - retorna -1 caso não encontre
 // OBS: considera-se que o vetor está ordenado de acordo com o atributo específico da busca
@@ -255,49 +328,59 @@ int findLast(const arrayListIdioma &arr, string target, bool param)
 // OBS: considera-se que o vetor está ordenado de acordo com o atributo específico da busca
 arrayListIdioma binSearchGroups(const arrayListIdioma &lista, string target, bool ppaisOuFamling)
 {
+    // Traduzindo o atributo escolhido para ser usado em isSorted()
+    int atributoEspecifico;
+    if (ppaisOuFamling)
+        atributoEspecifico = 2;
+    else
+        atributoEspecifico = 3;
+
+    // Garante que o array sempre está ordenado em ordem crescente
+    if (!isSorted(lista, atributoEspecifico))
+        return errorArray();
+
+    // Ocorrências do target no vetor
     int primeiraInst = findFirst(lista, target, ppaisOuFamling);
     int ultimaInst = findLast(lista, target, ppaisOuFamling);
 
     int range = ultimaInst + 1 - primeiraInst;
     int deletados = 0;
 
-    idioma *correspondencias = new idioma[range];
-
+    // Evitando que tamanhos inválidos sejam usados
     if (range == 0 || primeiraInst < 0 || ultimaInst < 0)
+        return errorArray();
+
+    for (int i = primeiraInst; i <= ultimaInst; i++)
     {
-        arrayListIdioma a = newArrayListIdioma(-1);
-        return a;
+        if (lista.db[i].del)
+            deletados++;
     }
 
-    if (primeiraInst > -1)
-    {
-        for (int i = 0; i < range; i++)
+    // Evitando que retorne um vetor com idiomas deletados
+    if (deletados == range)
+        return errorArray();
+
+    idioma *correspondencias = new idioma[range - deletados];
+
+    // Copiando os valores
+    int j = 0;
+    for (int i = primeiraInst; i <= ultimaInst; i++)
+        if (!lista.db[i].del)
         {
-            if (!lista.db[i + primeiraInst].del)
-                correspondencias[i] = lista.db[i + primeiraInst];
-            else
-                deletados++;
+            correspondencias[j] = lista.db[i];
+            j++;
         }
-    }
 
-    // Diminuindo o vetor caso tenha algum idioma deletado nele
-    if (deletados)
+    int validos = range - deletados;
+
+    arrayListIdioma retorno = newArrayListIdioma(validos, validos, correspondencias);
+
+    // Garantindo que não há erro de inicialização
+    if (!retorno.valido)
     {
-        int j = 0;
-        idioma *correspondenciasResize = new idioma[range - deletados];
-        for (int i = 0; i < range; i++)
-            if (!correspondencias[i].del)
-            {
-                correspondenciasResize[j] = correspondencias[i];
-                j++;
-            }
-
-        delete[] correspondencias;
-        correspondencias = correspondenciasResize;
-        range = range - deletados;
+        clearArrayListIdioma(retorno);
+        return errorArray();
     }
-
-    arrayListIdioma retorno = newArrayListIdioma(range, range, correspondencias);
 
     return retorno;
 }
@@ -306,6 +389,9 @@ arrayListIdioma binSearchGroups(const arrayListIdioma &lista, string target, boo
 // OBS: considera-se que o vetor está ordenado de acordo com o atributo específico da busca
 idioma binSearchNome(arrayListIdioma &lista, string target)
 {
+    if (!isSorted(lista, 1))
+        return error();
+
     int left = 0;
     int right = lista.tamanho - 1;
 
@@ -328,8 +414,9 @@ idioma binSearchNome(arrayListIdioma &lista, string target)
 
 //? Organização dos dados no vetor
 
-// Controle de partição quicksort. OBS: in-place.
+// Controle de partição quicksort - AKA onde é feita a reordenação das partições do quicksort
 // Opc -> escolha entre os atributos `nome`, `famLing` e `ppais`: 0, 1, 2 respectivamente
+// OBS: in-place
 int partitionString(arrayListIdioma &arr, int left, int right, int opc)
 {
     string pivot;
@@ -338,6 +425,7 @@ int partitionString(arrayListIdioma &arr, int left, int right, int opc)
     switch (opc)
     {
     case 0:
+        // Troca, com base no nome, os idiomas que possuem nomes lexicográficamente maiores para posições mais à direita
         pivot = arr.db[right].nome;
         for (int j = left; j < right; j++)
         {
@@ -351,6 +439,7 @@ int partitionString(arrayListIdioma &arr, int left, int right, int opc)
         break;
 
     case 1:
+        // Troca, com base na família linguística, os idiomas que possuem famLings lexicográficamente maiores para posições mais à direita
         pivot = arr.db[right].famLing;
         for (int j = left; j < right; j++)
         {
@@ -364,6 +453,7 @@ int partitionString(arrayListIdioma &arr, int left, int right, int opc)
         break;
 
     case 2:
+        // Troca, com base no principal país, os idiomas que possuem ppais lexicográficamente maiores para posições mais à direita
         pivot = arr.db[right].principalPais;
         for (int j = left; j < right; j++)
         {
@@ -403,7 +493,8 @@ void quicksortString(arrayListIdioma &arr, int left, int right, int opc = 0)
         }
 }
 
-// Controle de partição quicksort. OBS: in-place.
+// Controle de partição quicksort - AKA onde é feita a reordenação das partições do quicksort 
+// OBS: in-place.
 int partitionId(arrayListIdioma &arr, int left, int right)
 {
     int pivot = arr.db[right].id;
@@ -434,7 +525,8 @@ void quicksortId(arrayListIdioma &arr, int left, int right)
     }
 }
 
-// Controle de partição quicksort. OBS: in-place.
+// Controle de partição quicksort - AKA onde é feita a reordenação das partições do quicksort. 
+// OBS: in-place.
 int partitionNumFal(arrayListIdioma &arr, int left, int right, bool cres)
 {
     double pivot = arr.db[right].numfalantes;
@@ -854,7 +946,7 @@ void updateIdioma(arrayListIdioma &lista)
     cout << "Qual é o ID do idioma que deseja atualizar? ( ID = Número de identificaçao || Identificador)" << endl;
     int id = input(1, lista.tamanho);
 
-    idioma antigo = findById(lista, id);
+    idioma antigo = binSearchId(lista, id);
 
     if (antigo.del == true || !antigo.valido)
     {
@@ -870,10 +962,16 @@ void updateIdioma(arrayListIdioma &lista)
     string nome;
     idioma lixo;
     quicksortString(lista, 0, lista.tamanho - 1, 0);
+    // Garante um nome único, sempre
     do
     {
         getline(cin, nome);
         lixo = binSearchNome(lista, nome);
+
+        // Caso o usuário não queira mudar o nome, aqui é ignorado quando o idioma original é achado na busca binária
+        if(antigo.id == lixo.id)
+            lixo.valido = false; // Válido representa que binsearchNome achou um idioma com o mesmo nome, portanto caso valido == true um novo input deve ser recebido
+
     } while (nome.empty() || lixo.valido);
     quicksortId(lista, 0, lista.tamanho - 1);
 
@@ -931,7 +1029,7 @@ void deleteIdioma(arrayListIdioma &lista)
     cout << "Qual é o ID do idioma que deseja remover? ( ID = Número de identificaçao || Identificador)" << endl;
     int id = input(1, lista.tamanho);
 
-    idioma antigo = findById(lista, id);
+    idioma antigo = binSearchId(lista, id);
 
     if (antigo.del == true || !antigo.valido)
     {
