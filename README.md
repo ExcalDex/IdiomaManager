@@ -42,7 +42,7 @@ IdiomaManager/
 ├── db.csv # Banco de dados persistente
 └── docs/
     └── Projeto-Prático-Descrição-2025s2.docx # Especificação original
-    └── Relatório.docx # Relatório e reflexões do projeto
+    └── Relatório - Sistema de Gerenciamento de Idiomas.pdf # Relatório e reflexões do projeto
 ```
 
 ### 🧱 Compilação
@@ -162,7 +162,7 @@ IdiomaManager/
 ├── db.csv # Persistent language database
 └── docs/
     └── Projeto-Prático-Descrição-2025s2.docx # Original assignment specification
-    └── Relatório.docx # Project report and reflections
+    └── Relatório - Sistema de Gerenciamento de Idiomas.pdf # Project report and reflections (in portuguese)
 ```
 ### 🧱 Compilation
 ```
