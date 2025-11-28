@@ -1,4 +1,3 @@
-//* * Favor ler o README.md para melhor entendimento
 // Sistema de gerenciamento de Idiomas
 // André Santos Gomes
 // Bernardo Abrahão Mantovani
@@ -27,9 +26,10 @@ struct arrayListIdioma
     int capacidade = 0, tamanho = 0;
     idioma *db = nullptr;
     bool valido = true;
+    int nextId = 1;
 };
 
-// ? Controle de erros na criação de instâncias das Estruturas de dados
+// ? Controle de instancias que simbolizam erros
 
 // Retorna instância inválida de idioma
 idioma error()
@@ -45,8 +45,6 @@ arrayListIdioma errorArray()
     arrayListIdioma newInst;
     newInst.valido = false;
     newInst.db = nullptr;
-    newInst.capacidade = 0;
-    newInst.tamanho = 0;
 
     return newInst;
 }
@@ -67,6 +65,7 @@ arrayListIdioma newArrayListIdioma(int size)
         newInst.db = new idioma[size];
         newInst.capacidade = size;
         newInst.tamanho = 0;
+        newInst.nextId = 1;
     }
 
     return newInst;
@@ -74,7 +73,7 @@ arrayListIdioma newArrayListIdioma(int size)
 
 // Usado para cópias
 // OBS: Não copia o próprio vetor de Idiomas, apenas adota o seu ponteiro)
-arrayListIdioma newArrayListIdioma(int size, int tamanho, idioma *db)
+arrayListIdioma newArrayListIdioma(int size, int tamanho, idioma *db, int nextId)
 {
     if (db == nullptr || size < tamanho || size < 0 || tamanho < 0)
         return errorArray();
@@ -83,6 +82,7 @@ arrayListIdioma newArrayListIdioma(int size, int tamanho, idioma *db)
     newInst.db = db;
     newInst.capacidade = size;
     newInst.tamanho = tamanho;
+    newInst.nextId = nextId;
 
     return newInst;
 }
@@ -138,10 +138,8 @@ idioma add(arrayListIdioma &lista, idioma idiomaNovo)
     if (!idiomaNovo.valido || lista.tamanho < 0)
         return error();
 
-    if (lista.tamanho > 0)
-        idiomaNovo.id = lista.db[lista.tamanho - 1].id + 1;
-    else
-        idiomaNovo.id = 1;
+    idiomaNovo.id = lista.nextId;
+    lista.nextId++;
 
     while (lista.tamanho >= lista.capacidade)
         resize(lista);
@@ -323,7 +321,7 @@ int findLast(const arrayListIdioma &arr, string target, bool param)
     return result;
 }
 
-// Busca binária válida para Principal País e Grupo Linguístico - Retorna um grupo de resultados válidos
+// Busca binária válida para Principal País e Família Linguística - Retorna um grupo de resultados válidos
 // ppaisOuFamling = false -> ppais, true -> famLing - Aglutinação de duas funções em uma
 // OBS: considera-se que o vetor está ordenado de acordo com o atributo específico da busca
 arrayListIdioma binSearchGroups(const arrayListIdioma &lista, string target, bool ppaisOuFamling)
@@ -373,7 +371,7 @@ arrayListIdioma binSearchGroups(const arrayListIdioma &lista, string target, boo
 
     int validos = range - deletados;
 
-    arrayListIdioma retorno = newArrayListIdioma(validos, validos, correspondencias);
+    arrayListIdioma retorno = newArrayListIdioma(validos, validos, correspondencias, lista.nextId);
 
     // Garantindo que não há erro de inicialização
     if (!retorno.valido)
@@ -493,7 +491,7 @@ void quicksortString(arrayListIdioma &arr, int left, int right, int opc = 0)
         }
 }
 
-// Controle de partição quicksort - AKA onde é feita a reordenação das partições do quicksort 
+// Controle de partição quicksort - AKA onde é feita a reordenação das partições do quicksort
 // OBS: in-place.
 int partitionId(arrayListIdioma &arr, int left, int right)
 {
@@ -525,7 +523,7 @@ void quicksortId(arrayListIdioma &arr, int left, int right)
     }
 }
 
-// Controle de partição quicksort - AKA onde é feita a reordenação das partições do quicksort. 
+// Controle de partição quicksort - AKA onde é feita a reordenação das partições do quicksort.
 // OBS: in-place.
 int partitionNumFal(arrayListIdioma &arr, int left, int right, bool cres)
 {
@@ -969,7 +967,7 @@ void updateIdioma(arrayListIdioma &lista)
         lixo = binSearchNome(lista, nome);
 
         // Caso o usuário não queira mudar o nome, aqui é ignorado quando o idioma original é achado na busca binária
-        if(antigo.id == lixo.id)
+        if (antigo.id == lixo.id)
             lixo.valido = false; // Válido representa que binsearchNome achou um idioma com o mesmo nome, portanto caso valido == true um novo input deve ser recebido
 
     } while (nome.empty() || lixo.valido);
@@ -1151,6 +1149,7 @@ arrayListIdioma init()
 // Faz exatamente o que você imagina
 void save(arrayListIdioma &lista)
 {
+    quicksortId(lista, 0, lista.tamanho - 1);
     int deletados = 0;
     for (int i = 0; i < lista.tamanho; i++)
         if (lista.db[i].del)
