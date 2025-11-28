@@ -120,7 +120,6 @@ void resize(arrayListIdioma &vet)
 }
 
 // Troca instancias de idioma dentro do vetor por outras
-// Considera que o vetor está ordenado com base no id
 idioma update(arrayListIdioma &lista, int at, idioma idiomaNovo)
 {
     if (!lista.valido || at >= lista.tamanho || lista.db[at].del)
@@ -131,8 +130,6 @@ idioma update(arrayListIdioma &lista, int at, idioma idiomaNovo)
 }
 
 // Adiciona um idioma no final do vetor
-// Considera que o vetor está ordenado com base no id
-// O id do novo elemento é baseado no id do último
 idioma add(arrayListIdioma &lista, idioma idiomaNovo)
 {
     if (!idiomaNovo.valido || lista.tamanho < 0)
@@ -151,13 +148,12 @@ idioma add(arrayListIdioma &lista, idioma idiomaNovo)
 }
 
 // Marca um idioma como deletado
-// Considera que o vetor está ordenado com base no id
-idioma removeIdioma(arrayListIdioma &lista, int id)
+idioma removeIdioma(arrayListIdioma &lista, int at)
 {
-    if (lista.tamanho >= id)
+    if (lista.tamanho > at)
     {
-        lista.db[id - 1].del = true;
-        return lista.db[id - 1];
+        lista.db[at].del = true;
+        return lista.db[at];
     }
 
     return error();
@@ -212,10 +208,12 @@ bool isSorted(const arrayListIdioma &vet, int atributoEspecifico)
 
 // Faz exatamente o que parece
 // Considera o vetor já ordenado
-idioma binSearchId(const arrayListIdioma &lista, int target)
+// Retorna a posição do idioma no vetor, não uma cópia do idioma
+// Recomenda-se utilizar no caso de escrita ou sobrescrita de dados
+int binSearchId(const arrayListIdioma &lista, int target)
 {
     if (!isSorted(lista, 0))
-        return error();
+        return -1;
 
     int left = 0;
     int right = lista.tamanho - 1;
@@ -225,7 +223,7 @@ idioma binSearchId(const arrayListIdioma &lista, int target)
         int mid = left + (right - left) / 2;
 
         if (lista.db[mid].id == target && !lista.db[mid].del)
-            return lista.db[mid];
+            return mid;
 
         else if (lista.db[mid].id < target)
             left = mid + 1;
@@ -234,7 +232,7 @@ idioma binSearchId(const arrayListIdioma &lista, int target)
             right = mid - 1;
     }
 
-    return error();
+    return -1;
 }
 
 // Acha a primeira instância no vetor - retorna -1 caso não encontre
@@ -323,6 +321,8 @@ int findLast(const arrayListIdioma &arr, string target, bool param)
 
 // Busca binária válida para Principal País e Família Linguística - Retorna um grupo de resultados válidos
 // ppaisOuFamling = false -> ppais, true -> famLing - Aglutinação de duas funções em uma
+// Retorna uma cópia dos idiomas correspondente
+// Recomenda-se utilizar no caso de leitura de dados
 // OBS: considera-se que o vetor está ordenado de acordo com o atributo específico da busca
 arrayListIdioma binSearchGroups(const arrayListIdioma &lista, string target, bool ppaisOuFamling)
 {
@@ -384,6 +384,8 @@ arrayListIdioma binSearchGroups(const arrayListIdioma &lista, string target, boo
 }
 
 // Faz exatamente o que parece que faz
+// Retorna uma cópia do idioma
+// Recomenda-se utilizar no caso de leitura de dados
 // OBS: considera-se que o vetor está ordenado de acordo com o atributo específico da busca
 idioma binSearchNome(arrayListIdioma &lista, string target)
 {
@@ -746,7 +748,6 @@ void opcoesLerDados(arrayListIdioma &lista)
 
             quicksortString(lista, 0, lista.tamanho - 1, 0);
             idioma target = binSearchNome(lista, nome);
-            quicksortId(lista, 0, lista.tamanho - 1);
 
             if (!target.valido || !target.id || target.del)
             {
@@ -774,7 +775,6 @@ void opcoesLerDados(arrayListIdioma &lista)
 
             quicksortString(lista, 0, lista.tamanho - 1, 1);
             arrayListIdioma correspondentes = binSearchGroups(lista, famLing, true);
-            quicksortId(lista, 0, lista.tamanho - 1);
 
             if (!correspondentes.valido || correspondentes.capacidade == 0)
                 cout << "Família Linguística não encontrada!" << endl;
@@ -836,7 +836,6 @@ void opcoesLerDados(arrayListIdioma &lista)
 
             quicksortString(lista, 0, lista.tamanho - 1, 2);
             arrayListIdioma correspondentes = binSearchGroups(lista, ppais, false);
-            quicksortId(lista, 0, lista.tamanho - 1);
 
             if (!correspondentes.valido || correspondentes.capacidade == 0)
                 cout << "País não encontrado!" << endl;
@@ -889,7 +888,6 @@ void novoIdioma(arrayListIdioma &lista)
         getline(cin, nome);
         lixo = binSearchNome(lista, nome);
     } while (nome.empty() || lixo.valido);
-    quicksortId(lista, 0, lista.tamanho - 1);
 
     cout << "Qual é a família linguística do idioma?" << endl
          << "OBS: Escreva nesse formato - Japonês isolado, Indo-europeia (românica) - com a primeira letra maiúscula e com acentuação." << endl;
@@ -944,7 +942,12 @@ void updateIdioma(arrayListIdioma &lista)
     cout << "Qual é o ID do idioma que deseja atualizar? ( ID = Número de identificaçao || Identificador)" << endl;
     int id = input(1, lista.tamanho);
 
-    idioma antigo = binSearchId(lista, id);
+    quicksortId(lista, 0, lista.tamanho - 1);
+    int pos = binSearchId(lista, id);
+    idioma antigo = error();
+
+    if(pos >= 0)
+        lista.db[pos];
 
     if (antigo.del == true || !antigo.valido)
     {
@@ -971,7 +974,6 @@ void updateIdioma(arrayListIdioma &lista)
             lixo.valido = false; // Válido representa que binsearchNome achou um idioma com o mesmo nome, portanto caso valido == true um novo input deve ser recebido
 
     } while (nome.empty() || lixo.valido);
-    quicksortId(lista, 0, lista.tamanho - 1);
 
     cout << "Qual é a nova família linguística do idioma?" << endl
          << "OBS: Escreva nesse formato - Japonês isolado, Indo-europeia (românica) - com a primeira letra maiúscula e com acentuação." << endl;
@@ -1008,7 +1010,7 @@ void updateIdioma(arrayListIdioma &lista)
     i.numfalantes = numFal;
     i.principalPais = ppais;
 
-    i = update(lista, id - 1, i);
+    i = update(lista, pos, i);
     if (i.valido)
         cout << "Idioma atualizado com sucesso!" << endl;
     else
@@ -1027,7 +1029,12 @@ void deleteIdioma(arrayListIdioma &lista)
     cout << "Qual é o ID do idioma que deseja remover? ( ID = Número de identificaçao || Identificador)" << endl;
     int id = input(1, lista.tamanho);
 
-    idioma antigo = binSearchId(lista, id);
+    quicksortId(lista, 0, lista.tamanho - 1);
+    int pos = binSearchId(lista, id);
+    idioma antigo = error();
+    
+    if(pos >= 0)
+        antigo = lista.db[pos];
 
     if (antigo.del == true || !antigo.valido)
     {
@@ -1035,7 +1042,7 @@ void deleteIdioma(arrayListIdioma &lista)
         return;
     }
 
-    idioma i = removeIdioma(lista, id);
+    idioma i = removeIdioma(lista, pos);
     if (i.id)
         cout << "Idioma removido com sucesso!" << endl;
     else
